@@ -144,4 +144,13 @@
             }
             // 取最高分类型
             const maxType = Object.entries(score).sort((a,b)=>b[1]-a[1])[0][0];
-            resultBox.style.dis
+            resultBox.style.display="black";
+             resultBox.innerHTML = `
+                 <h3>你的主导SBTI风格：${maxType}型</h3>
+                 <p style="margin-top:10px;line-height:1.7;">${resultDesc[maxType]}</p >
+                 <p style="margin-top:10px;">得分详情：D=${score.D}，I=${score.I}，S=${score.S}，C=${score.C}</p >
+             `;
+         };
+     </script>
+ </body>
+<html>
