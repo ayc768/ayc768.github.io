@@ -1,6 +1,147 @@
-请生成一个单文件HTML的SBTI DISC行为风格在线测评页面，要求：
-1. 纯HTML+原生JS+极简CSS，无外部依赖，可直接在浏览器运行；
-2. 测评围绕D支配型、I影响型、S稳健型、C尽责型4个维度出题；
-3. 共20道单选题，每题5个选项：非常符合、比较符合、中立、不太符合、完全不符合；
-4. 答题结束后自动计算得分，判定主导人格类型，附带每种类型的详细解读；
-5. 页面适配手机端，布局简洁，代码完整可直接上传GitHub。
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBTI 行为风格测评</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 30px;
+        }
+        .question {
+            margin: 20px 0;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .question p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .options label {
+            padding: 6px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #submitBtn {
+            width: 100%;
+            padding: 14px;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        #resultBox {
+            margin-top: 25px;
+            padding: 20px;
+            background: #edf2f7;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SBTI 行为风格测评</h1>
+        <div id="testBox"></div>
+        <button id="submitBtn">提交测评，查看结果</button>
+        <div id="resultBox"></div>
+    </div>
+
+    <script>
+        // SBTI-DISC 20道测评题目
+        const questions = [
+            { q: "遇到问题时，我习惯快速做出决定", type: "D" },
+            { q: "我乐于主动带动团队氛围，喜欢社交", type: "I" },
+            { q: "我更倾向稳定不变的工作环境，不喜突发变化", type: "S" },
+            { q: "做决定前，我会反复核对细节，追求严谨准确", type: "C" },
+            { q: "面对冲突，我更愿意直接解决问题，不回避矛盾", type: "D" },
+            { q: "我擅长说服他人，很享受和陌生人交流", type: "I" },
+            { q: "我习惯配合他人节奏，不愿主动争抢主导权", type: "S" },
+            { q: "规则和流程对我来说非常重要，必须严格遵守", type: "C" },
+            { q: "压力越大，我越想掌控局面，推动事情落地", type: "D" },
+            { q: "我很在意他人的感受，说话更偏向共情表达", type: "I" },
+            { q: "我讨厌频繁变动，偏爱按固定计划执行任务", type: "S" },
+            { q: "完成工作后，我会反复检查错误，追求完美", type: "C" },
+            { q: "我更看重效率，做事干脆利落，不喜欢拖沓", type: "D" },
+            { q: "我喜欢分享想法，很容易带动身边人的情绪", type: "I" },
+            { q: "我习惯倾听他人，很少主动表达反对意见", type: "S" },
+            { q: "做计划时，我会把细节全部梳理清楚再行动", type: "C" },
+            { q: "我目标感很强，会优先达成结果，忽略部分人情细节", type: "D" },
+            { q: "我更喜欢轻松有趣的沟通，不喜欢严肃刻板的氛围", type: "I" },
+            { q: "团队合作中，我更愿意做支持者，而非领导者", type: "S" },
+            { q: "我做选择时，更依赖数据和事实，而非直觉", type: "C" }
+        ];
+
+        // 人格结果说明
+        const resultDesc = {
+            D: "支配型（D）：目标导向，果断强势，喜欢掌控局面，擅长推动事务落地，适合决策、管理类岗位",
+            I: "影响型（I）：热情外向，擅长沟通社交，感染力强，适合销售、公关、团队氛围带动类工作",
+            S: "稳健型（S）：温和耐心，配合度高，追求稳定，擅长长期协作，适合行政、支持类岗位",
+            C: "尽责型（C）：严谨细致，逻辑缜密，重视规则细节，适合技术、财务、风控类岗位"
+        };
+
+        const testBox = document.getElementById("testBox");
+        const submitBtn = document.getElementById("submitBtn");
+        const resultBox = document.getElementById("resultBox");
+
+        // 渲染题目
+        questions.forEach((item, idx) => {
+            const div = document.createElement("div");
+            div.className = "question";
+            div.innerHTML = `
+                <p>${idx + 1}. ${item.q}</p >
+                <div class="options">
+                    <label><input type="radio" name="q${idx}" value="4"> 非常符合</label>
+                    <label><input type="radio" name="q${idx}" value="3"> 比较符合</label>
+                    <label><input type="radio" name="q${idx}" value="2"> 中立</label>
+                    <label><input type="radio" name="q${idx}" value="1"> 不太符合</label>
+                    <label><input type="radio" name="q${idx}" value="0"> 完全不符合</label>
+                </div>
+            `;
+            testBox.appendChild(div);
+        });
+
+        // 提交计算逻辑
+        submitBtn.onclick = function () {
+            let score = { D: 0, I: 0, S: 0, C: 0 };
+            for (let i = 0; i < questions.length; i++) {
+                const sel = document.querySelector(`input[name="q${i}"]:checked`);
+                if (!sel) {
+                    alert(`请完成第 ${i+1} 题再提交`);
+                    return;
+                }
+                score[questions[i].type] += Number(sel.value);
+            }
+            // 取最高分类型
+            const maxType = Object.entries(score).sort((a,b)=>b[1]-a[1])[0][0];
+            resultBox.style.dis
